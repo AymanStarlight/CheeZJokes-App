@@ -11,6 +11,8 @@ export class Main extends Component {
         }
         this.deleteLS = this.deleteLS.bind(this)
         this.fetchJokes = this.fetchJokes.bind(this)
+        this.jokesToState = this.jokesToState.bind(this)
+        this.containsDuplicates = this.containsDuplicates.bind(this)
     }
     async fetchJokes() {
         let URL = 'https://icanhazdadjoke.com/'
@@ -22,12 +24,40 @@ export class Main extends Component {
                     Accept: 'application/json'
                 }
             })
-
             Js.push(response.data)
         }
-        Js.forEach(j => this.setState(st => ({
-            jokes: [...st.jokes, j]
-        })))
+
+        return Js
+    }
+    containsDuplicates(array) {
+        const result = array.some(element => {
+            if (array.indexOf(element) !== array.lastIndexOf(element)) {
+                return true;
+            }
+
+            return false;
+        });
+
+        return result;
+    }
+    async jokesToState() {
+        try {
+            let Js = await this.fetchJokes()
+            if (this.containsDuplicates(Js) == true) {
+                Js = await this.fetchJokes()
+            } else {
+                Js.forEach(j => this.setState(st => ({
+                    jokes: [...st.jokes, j]
+                })))
+            }
+
+        } catch (error) {
+            alert(error)
+        }
+
+
+
+
     }
     async componentDidMount() {
 
@@ -37,7 +67,7 @@ export class Main extends Component {
                 jokes: [...st.jokes, j]
             })))
         } else {
-            this.fetchJokes()
+            this.jokesToState()
         }
     }
 
@@ -49,7 +79,7 @@ export class Main extends Component {
     async deleteLS() {
         localStorage.clear()
         this.setState({ jokes: [] })
-        this.fetchJokes()
+        this.jokesToState()
     }
 
     render() {
